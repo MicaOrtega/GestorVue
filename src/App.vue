@@ -13,7 +13,7 @@
           <router-link to="/tasklist">Lista de Tareas</router-link> |
         </li>
         <li class="nav-item">
-          <router-link to="/combinedview">Vista Combinada</router-link> |
+          <router-link to="/combinedview">Vista Combinada</router-link>
         </li>
       </ul>
     </nav>
