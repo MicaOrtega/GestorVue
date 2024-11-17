@@ -65,6 +65,7 @@ export default {
         // Eliminar la tarea seleccionada
         deleteTask(task) {
             this.tasks = this.tasks.filter((t) => t.id !== task.id);
+            this.saveApiTasksToLocalStorage();
         },
 
         saveApiTasksToLocalStorage(){
