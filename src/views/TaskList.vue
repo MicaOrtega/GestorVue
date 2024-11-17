@@ -1,12 +1,11 @@
 <template>
     <div>
         <h1>Lista de Tareas</h1>
-        <button @click="fetchTasks" class="button">Cargar Tareas</button>
+        <button v-if="!tasksLoaded" @click="fetchTasks" class="button">Cargar Tareas</button>
         <div v-if="tasks.length > 0" class="task-list">
             <div v-for="task in tasks" :key="task.id" class="task-item">
+                <span :class="{ completed: task.completed }">{{ task.todo }}</span>
                 <div>
-                    <h5 :style="{ textDecoration: task.completed ? 'line-through' : 'none' }">{{ task.todo }}</h5>
-                    <span>{{ task.completed ? 'Completada' : 'Pendiente' }}</span>
                     <button @click="toggleTaskCompletion(task)">
                         {{ task.completed ? 'Desmarcar' : 'Completar' }}
                     </button>
@@ -18,11 +17,13 @@
 </template>
 
 <script>
+
 export default {
     name: "TaskList",
     data() {
         return {
             tasks: [], // Almacenamiento local de las tareas traídas de la API
+            tasksLoaded: false,
         };
     },
     methods: {
@@ -31,44 +32,54 @@ export default {
             // Aquí deberían realizar la solicitud a la API usando axios o fetch.
             // La URL que usaremos es: https://dummyjson.com/todos
             fetch("https://dummyjson.com/todos")
-                .then(response => response.json())
-                .then(data => {
-                    this.tasks = data.todos;
-                    this.saveTasksToLocalStorage();
+                .then((response) => response.json())
+                .then((data) => {
+                    this.tasks = data.todos.map((task) => ({
+                        id: task.id,
+                        todo: task.todo,
+                        completed: task.completed,
+                    }));
+                    this.tasksLoaded = true;
+                    this.saveApiTasksToLocalStorage();
                 })
-                .catch(error => console.error("Error al cargar tareas:", error));
+                .catch((error) =>
+                    console.error("Error al cargar tareas desde la API:", error)
+                );
             // Sugerencia: Intentar implementarlo con axios o fetch
         },
 
         // Cambiar el estado de una tarea (completada/no completada)
         toggleTaskCompletion(task) {
             task.completed = !task.completed;
-            this.saveTasksToLocalStorage();
+            this.saveApiTasksToLocalStorage();
+        },
+
+        loadApiTasksToLocalStorage(){
+            const storedTasks = localStorage.getItem("apiTasks");
+            if(storedTasks){
+                this.tasks = JSON.parse(storedTasks);
+                this.tasksLoaded=true;
+            }
         },
 
         // Eliminar la tarea seleccionada
         deleteTask(task) {
             this.tasks = this.tasks.filter((t) => t.id !== task.id);
-            this.saveTasksToLocalStorage()
         },
 
-        saveTasksToLocalStorage(){
-            localStorage.setItem("tasks", JSON.stringify(this.tasks));
+        saveApiTasksToLocalStorage(){
+            localStorage.setItem("apiTasks", JSON.stringify(this.tasks));
         },
 
-        loadTasksFromLocalStorage(){
-            const storedTasks= localStorage.getItem("tasks");
-            if(storedTasks){
-                this.tasks= JSON.parse(storedTasks);
-            }
-        },
     },
 
     created(){
-        
+        this.loadApiTasksToLocalStorage();
     },
+
 };
 </script>
+
 
 <style scoped>
 /* Aquí pueden experimentar con estilos de tu preferencia */

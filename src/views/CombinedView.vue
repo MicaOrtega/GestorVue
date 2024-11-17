@@ -1,20 +1,9 @@
 <template>
     <div>
-        <h1>Lista de Tareas</h1>
+        <h1>Lista de Tareas Completa</h1>
         <!-- Esta seccion es una combinación de las dos vistas anteriores -->
-        <div v-if="tasks.length > 0" class="task-list">
-            <div v-for="task in tasks" :key="task.id" class="task-item">
-                <span :class="{ completed: task.completed }">{{ task.todo }}</span>
-                <div>
-                    <button @click="toggleTaskCompletion(task)">
-                        {{ task.completed ? 'Desmarcar' : 'Completar' }}
-                    </button>
-                    <button @click="deleteTask(task)">Eliminar</button>
-                </div>
-            </div>
-        </div>
-        <div v-if="tasks.length > 0" class="task-list">
-            <div v-for="task in tasks" :key="task.id" class="task-item">
+        <div v-if="allTasks.length > 0" class="task-list">
+            <div v-for="task in allTasks" :key="task.id" class="task-item">
                 <span :class="{ completed: task.completed }">{{ task.todo }}</span>
                 <div>
                     <button @click="toggleTaskCompletion(task)">
@@ -30,70 +19,74 @@
 <script>
    // Esta sección debe permitir agregar tareas nuevas a la vez que extraer las tareas anteriores de la API
     export default {
-    name: "TaskManager",
+    name: "TaskCombined",
     data() {
         return {
-            newTask: "",     // Campo de entrada para la nueva tarea
-            tasks: [],       // Lista de tareas locales
+            localTasks: [],
+            apiTasks: [],       // Lista de tareas locales
         };
     },
+    
+    computed:{
+        allTasks(){
+            return[...this.localTasks, ...this.apiTasks];
+        }
+    },
+
     methods: {
-        // Método para agregar nueva tarea
-        addTask() {
-            if (this.newTask.trim() === "") return;
-
-            const newTask = {
-                todo: this.newTask,
-                completed: false,
-                id: Date.now(),
-            };
-
-            // Añadir nueva tarea al principio de la lista
-            this.tasks.unshift(newTask);
-            this.saveTasksToLocalStorage();
-            this.newTask = ""; // Limpiar campo de entrada
-        },
-
-        // Método para eliminar tarea
-        deleteTask(task) {
-            this.tasks = this.tasks.filter((t) => t.id !== task.id);
-            this.saveTasksToLocalStorage();
-        },
 
         // Cambiar estado de tarea
         toggleTaskCompletion(task) {
-            task.completed = !task.completed;
-            this.saveTasksToLocalStorage();
+            task.completed= !task.completed;
+
+            if(this.localTasks.includes(task)){ 
+                this.saveLocalTasks()
+            }else if(this.apiTasks.includes(task)){
+                this.saveApiTasks();
+            }
         },
 
-        // Guardar tareas en localStorage
         saveTasksToLocalStorage() {
-            localStorage.setItem("tasks", JSON.stringify(this.tasks));
+            localStorage.setItem("usertasks", JSON.stringify(this.localTasks));
         },
 
-        // Cargar tareas desde localStorage
-        loadTasksFromLocalStorage() {
-            const storedTasks = localStorage.getItem("tasks");
+
+        deleteTask(task) {
+            if (this.localTasks.includes(task)) {
+                this.localTasks = this.localTasks.filter((t) => t.id !== task.id);
+                this.saveLocalTasks();
+            }else if (this.apiTasks.includes(task)) {
+                this.apiTasks = this.apiTasks.filter((t) => t.id !== task.id);
+            }
+        },
+        
+        loadLocalTasks() {
+            const storedTasks = localStorage.getItem("userTasks");
             if (storedTasks) {
-                this.tasks = JSON.parse(storedTasks);
+                this.localTasks = JSON.parse(storedTasks);
             }
         },
 
-        // Cargar tareas desde API externa
-        async fetchTasksFromAPI() {
-            try {
-                const response = await fetch("https://dummyjson.com/todos");
-                const data = await response.json();
-                // Extraer solo las primeras 5 tareas para no sobrecargar la lista
-                this.tasks = [...data.todos.slice(0, 5), ...this.tasks];
-                this.saveTasksToLocalStorage();
-            } catch (error) {
-                console.error("Error al cargar tareas desde la API:", error);
+        loadApiTasks(){
+            const storedApiTasks = localStorage.getItem("apiTasks");
+            if(storedApiTasks){
+                this.apiTasks=JSON.parse(storedApiTasks);
             }
-        }
+        },
+        
+        saveLocalTasks(){
+            localStorage.setItem("userTasks", JSON.stringify(this.localTasks));
+        },
+
+        saveApiTasks(){
+            localStorage.setItem("apiTasks", JSON.stringify(this.apiTasks))
+        },
+
     },
+    
     created() {
-        this.loadTasksFromLocalStorage(); // Cargar tareas al iniciar el componente
+        this.loadLocalTasks();
+        this.loadApiTasks();
     },
 };
 </script>

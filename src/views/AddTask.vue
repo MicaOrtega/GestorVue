@@ -11,7 +11,7 @@
             <button @click="addTask" class="add-button">Añadir</button>
         </div>
 
-        <div v-if="false" > 0" class="task-list">
+        <div v-if="tasks.length > 0" class="task-list">
             <div v-for="task in tasks" :key="task.id" class="task-item">
                 <span :class="{ completed: task.completed }">{{ task.todo }}</span>
                 <div>
@@ -46,28 +46,28 @@ export default {
 
             // Añadir la nueva tarea al inicio de la lista
             this.tasks.unshift(newTask);
-            this.saveTasksToLocalStorage();
+            this.saveLocalTasks();
             this.newTask = ""; // Limpiar el campo de entrada después de agregar
         },
 
         // Elimina una tarea específica de la lista
         deleteTask(task) {
             this.tasks = this.tasks.filter((t) => t.id !== task.id);
-            this.saveTasksToLocalStorage();
+            this.saveLocalTasks();
         },
 
         // Cambia el estado de la tarea entre completada y no completada
         toggleTaskCompletion(task) {
             task.completed = !task.completed;
-            this.saveTasksToLocalStorage();
+            this.saveLocalTasks();
         },
 
-        saveTasksToLocalStorage(){
-            localStorage.setItem("tasks", JSON.stringify(this.tasks));
+        saveLocalTasks(){
+            localStorage.setItem("userTasks", JSON.stringify(this.tasks));
         },
 
-        loadTasksFromLocalStorage() {
-            const storedTasks = localStorage.getItem("tasks");
+        loadLocalTask() {
+            const storedTasks = localStorage.getItem("userTasks");
             if (storedTasks) {
                 this.tasks = JSON.parse(storedTasks);
             }
@@ -76,8 +76,8 @@ export default {
     },
 
     created(){
-        this.loadTasksFromLocalStorage();
-    }
+        this.loadLocalTask();
+    },
 };
 </script>
 
